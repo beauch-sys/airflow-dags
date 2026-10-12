@@ -19,7 +19,7 @@ def _set_api_user_id(api_user_id, **context):
     try:
         logger.info(f'type:: {type(api_user_id)} and api_user_id:: {api_user_id}')
         if api_user_id == -1 or api_user_id == 10:
-            Variable.set(key="api_user_id", value="1")  
+            Variable.set(key="api_user_id", value=str(1))  
         else:
             Variable.set(key="api_user_id", value=str(int(api_user_id)+1)) 
         return f"Latest api user id {int(Variable.get(key='api_user_id'))} sucessfully"
@@ -68,21 +68,21 @@ with DAG(dag_id='load_api_aws_kinesis', default_args={'owner': 'Sovan'}, tags=["
     get_api_userId_params = PythonOperator(
         task_id = 'get_api_userId_params',
         python_callable = _set_api_user_id,
-        op_args=[int(.get("api_user_id", default_var="-1"))]
+        op_args=[int(.get("api_user_id", default_var=str(-1)))]
         # provide_context=True
     ) 
     
     extract_userposts = PythonOperator(
         task_id = 'extract_userposts',
         python_callable = _extract_userposts,
-        op_kwargs={"new_api_user_id": int(.get("api_user_id", default_var="-1"))}
+        op_kwargs={"new_api_user_id": int(.get("api_user_id", default_var=str(-1)))}
         # provide_context=True
     )
 
     write_userposts_to_stream = PythonOperator(
        task_id = 'write_userposts_to_stream',
        python_callable = _process_user_posts,
-       op_kwargs={"new_api_user_id": int(Variable.get("api_user_id", default_var="-1"))}
+       op_kwargs={"new_api_user_id": int(Variable.get("api_user_id", default_var=str(-1)))}
        # provide_context=True
     )
 
